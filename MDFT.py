@@ -99,14 +99,28 @@ class LinearModel(nn.Module):
     def __init__(self):
         super(LinearModel, self).__init__()
         # 全连接层，用于最后的回归
-        self.fc1 = torch.nn.Linear(79, 256)
-        self.fc2 = torch.nn.Linear(256, 256)
-        self.fc3 = torch.nn.Linear(256, 1)
+        self.input_fc = torch.nn.Linear(79, 256)
+        self.act = nn.ReLU()
+        self.body = nn.Sequential(*[nn.Linear(256, 512),
+                                    nn.ReLU(),
+                                    nn.Linear(512, 1024),
+                                    nn.ReLU(),
+                                    nn.Linear(1024, 2048),
+                                    nn.ReLU(),
+                                    nn.Linear(2048, 1024),
+                                    nn.ReLU(),
+                                    nn.Linear(1024, 512),
+                                    nn.ReLU(),
+                                    nn.Linear(512, 256),
+                                    ])
+        self.output_fc = torch.nn.Linear(256, 1)
 
     def forward(self, x):
-        x = self.fc1(x)
-        x = self.fc2(x)
-        x = self.fc3(x)
+        x = self.input_fc(x)
+        x = self.act(x)
+        x = self.body(x)
+        x = self.act(x)
+        x = self.output_fc(x)
         return x
 
 
@@ -156,13 +170,14 @@ def mean_absolute_percentage_error(y_true, y_pred):
 
 if __name__ == '__main__':
     train_loader, val_loader = dataset.get_dataset(0.7)
-    device = "cuda:0"
+    # device = "cuda:0"
+    device = "cpu"
     # model = MDFT().to(device)
     model = LinearModel().to(device)
     criterion = nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-2)
-    scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=[10, 100], gamma=0.5)
-    train_loss_list, val_loss_list = train_and_val(model, train_loader, val_loader, 200, criterion, optimizer,
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=[50, 100, 150], gamma=0.5)
+    train_loss_list, val_loss_list = train_and_val(model, train_loader, val_loader, 20, criterion, optimizer,
                                                    scheduler)
     torch.save(model.state_dict(), "TTS.pth")
     y_list = []
@@ -183,14 +198,16 @@ if __name__ == '__main__':
     print("val loss={}".format(test_loss))
     fig = plt.figure()
     fig.suptitle('TTS\nval loss={0:.2f}%'.format(test_loss))
-    ax_train_loss = fig.add_subplot(3, 2, 1)
-    ax_val_loss = fig.add_subplot(3, 2, 2)
-    ax_pred_y_total_year = fig.add_subplot(3, 1, 2)
-    ax_pred_y_only_test = fig.add_subplot(3, 1, 3)
+    ax_train_loss = fig.add_subplot(2, 2, 1)
+    ax_val_loss = fig.add_subplot(2, 2, 2)
+    ax_pred_y = fig.add_subplot(2, 1, 2)
 
     # 画loss
     ax_train_loss.plot(train_loss_list)
     ax_train_loss.set_title("train loss")
     ax_val_loss.plot(val_loss_list)
     ax_val_loss.set_title("val loss")
+    ax_pred_y.plot(y_list, "blue", label="y")
+    ax_pred_y.plot(pred_list, "red", label="pred")
+
     fig.savefig("TTS.png")

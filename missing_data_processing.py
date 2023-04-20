@@ -91,9 +91,12 @@ all_data = pd.concat([train.iloc[:, :-1], test])
 print(all_data)
 non_numeric_cols = all_data.select_dtypes(exclude=['number']).columns
 all_data[non_numeric_cols] = all_data[non_numeric_cols].apply(lambda x: pd.factorize(x)[0])
+# 分别对每一列做归一化
+all_data = all_data.apply(lambda x: (x - x.mean()) / x.std())
 print(all_data)
 train.iloc[:, :-1] = all_data.iloc[:len(train), :]
 test.iloc[:, :] = all_data.iloc[len(train):, :]
+
 # # 将处理后的数据进行保存
 train.to_csv("train_pre-process.csv")
 test.to_csv("test_pre-process.csv")
