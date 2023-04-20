@@ -86,6 +86,14 @@ print(missing_percentage(train))
 print("test pre-process")
 print(missing_percentage(test))
 
-# 将处理后的数据进行保存
+# # 进一步预处理，将文本特征转为离散型数字特征
+all_data = pd.concat([train.iloc[:, :-1], test])
+print(all_data)
+non_numeric_cols = all_data.select_dtypes(exclude=['number']).columns
+all_data[non_numeric_cols] = all_data[non_numeric_cols].apply(lambda x: pd.factorize(x)[0])
+print(all_data)
+train.iloc[:, :-1] = all_data.iloc[:len(train), :]
+test.iloc[:, :] = all_data.iloc[len(train):, :]
+# # 将处理后的数据进行保存
 train.to_csv("train_pre-process.csv")
 test.to_csv("test_pre-process.csv")
