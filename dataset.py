@@ -39,7 +39,7 @@ def get_dataset(train_percent=0.7):
     train_data = pd.read_csv("train_pre-process.csv").sample(frac=1.0)
     test_data = pd.read_csv("test_pre-process.csv")
     train_loader = DataLoader(
-        HousePriceDataset(train_data[:int(train_percent * len(train_data))].reset_index(drop=True)), batch_size=10,
+        HousePriceDataset(train_data[:int(train_percent * len(train_data))].reset_index(drop=True)), batch_size=1,
         shuffle=True)
     val_loader = DataLoader(HousePriceDataset(train_data[int(train_percent * len(train_data)):].reset_index(drop=True)))
     return train_loader, val_loader

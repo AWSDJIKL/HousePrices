@@ -5,10 +5,6 @@ Multi-Dimension Feature Transformer
 # @Time : 2023/4/19 10:14
 # @Author : LINYANZHEN
 # @File : MDFT.py
-import torch
-import torch.nn as nn
-import os
-import shutil
 
 import torch
 import torch.nn as nn
